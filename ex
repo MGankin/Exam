@@ -1,6 +1,5 @@
-text = open(r'C:\Users\Arashi\Downloads\Telegram Desktop\genome.fna')
-genome=text.read()
 from itertools import combinations
+
 # Эта функция берет на вход строку-геном, делит его на подстроки-хромосомы и чистит от лишних символов(названий хромосом).
 #На выходе получается список строк
 def GenomeSplit(string):
@@ -45,10 +44,11 @@ def FindPolyndromes(substring):
                 coordinates.append(subseq)
                 coordinates.append(i)
     return (coordinates)
-#Эта функция берет на вход список искомых палиндромов и список из результатов предыдущей функции
+#Эта функция берет на вход список искомых палиндромов, список из палиндромов и их положений, а также список длин хромосом
 #На выход идет список состоящий из списков длины отрезков. Относительно хромосом, списки расположены в том же порядке что и в оригиналном файле.
-def CutPolyndrome(List_Of_Polyndromes,PolyndromeData):
+def CutPolyndrome(List_Of_Polyndromes,PolyndromeData,WholeLength):
     result =[]
+    StringNumber = 0
     for list in PolyndromeData:
         RawLength = []
         i=0
@@ -61,22 +61,23 @@ def CutPolyndrome(List_Of_Polyndromes,PolyndromeData):
         count = 0
         for num in RawLength:
             if count == 0:
-                FinalLength.append(num+1)
+                FinalLength.append(num)
                 UsedLength += num
                 count += 1
             else:
                 dif = num - UsedLength
                 if dif > 6:
-                    FinalLength.append(dif+1)
+                    FinalLength.append(dif)
                     UsedLength += dif
                 count += 1
-            if num == RawLength[len(RawLength)-1] and len(FinalLength) == 1:
-                FinalLength.append(num - FinalLength[0])
+        FinalLength.append(WholeLength[StringNumber]-UsedLength)
         result.append(FinalLength)
-
+        StringNumber += 1
     return(result)
-
-def CalculatePolyndrome(lengths, PolyndromeData):
+# Эта функция берет на вход заданные длины, список из палиндромов и их положений, а также список длин хромосом.
+# Она генерирует из имеющихся в геноме палиндромов сочетания без повторений и подает на вход функции CutPolyndrome
+# На выход подается либо список подходящих палиндромов, либо сообщение о том, что подходящего набора ферментов нет.
+def CalculatePolyndrome(lengths, PolyndromeData,WholeLength):
     UniquePolyndromes = []
     for list in PolyndromeData:
         for i in range(0,len(list),2):
@@ -88,15 +89,16 @@ def CalculatePolyndrome(lengths, PolyndromeData):
             break
         FinalCheck = 0
         for polyndrome in combinations(UniquePolyndromes,j):
-           Prototype = CutPolyndrome(polyndrome,PolyndromeData)
+           Prototype = CutPolyndrome(polyndrome,PolyndromeData,WholeLength)
            ListCheck = 0
+           print(polyndrome)
            for list in Prototype:
                if list == []:
                    break
                NumCheck=0
                for num in list:
                    for value in lengths:
-                       if value+50 > num > value -50:
+                       if value+20 > num > value -20:
                            NumCheck += 1
                            break
                if NumCheck == len(list):
@@ -105,21 +107,40 @@ def CalculatePolyndrome(lengths, PolyndromeData):
                else:
                    break
            if ListCheck == len(Prototype):
-               FinalCheck += 1
+               FinalCheck +=1
                break
-        if ListCheck == 1:
+        if FinalCheck == 1:
             result = polyndrome
+            print
             break
-    return(1)
+    return(result)
 
-TestString = '>chrTGCGAATAAAAAACGATCTCGATAAAAAACTCGAAAATCTCGATCTCGATCAAAACAT>chr123ATGTCGATCTCGATCTCGATCTCGATCAAAAAATCGATCTCGATCTCGATCColATTAATo123GCATCGATCTCGAAAAAACTCGATCTCGATCTCGATCT>chr123ATATGTCGATCTCGATCTAAAAAAATGCTA'
-PlaceList = []
-List_of_substrings = GenomeSplit(TestString)
-for substrings in List_of_substrings:
-    poly = FindPolyndromes(substrings)
-    PlaceList.append(poly)
-print(CalculatePolyndrome([10,20,30],PlaceList))
-# print(CutPolyndrome(["AAAAAA","ATTAAT","ATGCTA"],PlaceList))
+print('Введите абсолютный путь до файла')
+path = str(input())
+text = open(path)
+genome=text.read()
+print('Введите 1, если хотите по заданным палиндромам узнать набор длин фрагментов. Введите 2 если хотите по заданным длинам определить типы рестриктаз')
+a=int(input())
 
-# for i in combinations (['ATGC','ATTT','GCAT'],2):
-#     print(i,type(i))
+if a == 1:
+    print('Введите палиндромы через пробел')
+    PolyList = [str(i) for i in input().split()]
+    PlaceList = []
+    List_of_substrings = GenomeSplit(genome)
+    WholeLength = []
+    for substrings in List_of_substrings:
+        poly = FindPolyndromes(substrings)
+        PlaceList.append(poly)
+        WholeLength.append(len(substrings))
+    print(CutPolyndrome(PolyList,PlaceList,WholeLength))
+if a ==2:
+    print("Введите длины через пробел")
+    LenList= [int(i) for i in input().split()]
+    PlaceList = []
+    List_of_substrings = GenomeSplit(genome)
+    WholeLength = []
+    for substrings in List_of_substrings:
+        poly = FindPolyndromes(substrings)
+        PlaceList.append(poly)
+        WholeLength.append(len(substrings))
+    print(CalculatePolyndrome(LenList, PlaceList, WholeLength))
