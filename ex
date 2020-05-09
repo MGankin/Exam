@@ -73,7 +73,6 @@ def CutPolyndrome(List_Of_Polyndromes,PolyndromeData):
             if num == RawLength[len(RawLength)-1] and len(FinalLength) == 1:
                 FinalLength.append(num - FinalLength[0])
         result.append(FinalLength)
-        print(result)
 
     return(result)
 
@@ -90,7 +89,6 @@ def CalculatePolyndrome(lengths, PolyndromeData):
         FinalCheck = 0
         for polyndrome in combinations(UniquePolyndromes,j):
            Prototype = CutPolyndrome(polyndrome,PolyndromeData)
-           print(polyndrome)
            ListCheck = 0
            for list in Prototype:
                if list == []:
